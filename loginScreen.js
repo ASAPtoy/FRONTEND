@@ -9,25 +9,62 @@ import {
   TextInput,
 } from "react-native";
 
+import {
+  login,
+  logout,
+  getProfile,
+} from "@react-native-seoul/kakao-login/native";
+
 const App = () => {
-  // State to control the visibility of the modals
   const [isLoginModalVisible, setLoginModalVisible] = useState(false);
   const [isSignUpModalVisible, setSignUpModalVisible] = useState(false);
-  // State for login and sign-up form fields
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [isAgree, setIsAgree] = useState(false);
 
-  // Functions to toggle the modal visibility
   const toggleLoginModal = () => {
     setLoginModalVisible(!isLoginModalVisible);
   };
+
   const toggleSignUpModal = () => {
     setSignUpModalVisible(!isSignUpModalVisible);
   };
+
   const toggleCheckbox = () => {
     setIsAgree(!isAgree);
   };
+
+  const signInWithKakao = async () => {
+    try {
+      const token = await login();
+      console.log("Kakao Login Token:", token);
+      // 로그인 성공 후 로직 추가
+    } catch (err) {
+      console.error("Kakao Login Error:", err);
+    }
+  };
+
+  const signOutWithKakao = async () => {
+    try {
+      const message = await logoutWithKakao();
+      console.log("Kakao Logout Message:", message);
+      // 로그아웃 성공 후 로직 추가
+    } catch (err) {
+      console.error("Kakao Logout Error:", err);
+    }
+  };
+
+  const getProfile = async () => {
+    try {
+      const profile = await getKakaoProfile();
+      console.log("Kakao Profile:", profile);
+      // 프로필 조회 성공 후 로직 추가
+    } catch (err) {
+      console.error("Kakao Profile Error:", err);
+    }
+  };
+
+  // 나머지 함수들도 필요에 따라 추가
 
   return (
     <View style={styles.container}>
@@ -35,7 +72,7 @@ const App = () => {
         source={require("./assets/adaptive-icon.png")}
         style={styles.logo}
       />
-      <TouchableOpacity style={styles.kakaoButton}>
+      <TouchableOpacity style={styles.kakaoButton} onPress={signInWithKakao}>
         <Text style={styles.buttonText}>Kakao로 시작하기</Text>
       </TouchableOpacity>
       <TouchableOpacity style={styles.naverButton}>
@@ -61,7 +98,7 @@ const App = () => {
           <View style={styles.modalView}>
             {/* App Logo */}
             <Image
-              source={require("./assets/adaptive-icon.png")} // Replace with your local path
+              source={require("./assets/adaptive-icon.png")}
               style={styles.modalLogo}
             />
             {/* Username Input */}
@@ -105,7 +142,7 @@ const App = () => {
           <View style={styles.modalView}>
             {/* App Logo */}
             <Image
-              source={require("./assets/adaptive-icon.png")} // Replace with your local path
+              source={require("./assets/adaptive-icon.png")}
               style={styles.modalLogo}
             />
             {/* Username Input */}
