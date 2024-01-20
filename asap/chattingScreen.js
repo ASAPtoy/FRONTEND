@@ -35,7 +35,7 @@ const ProductItem = ({id, name, price, likes, image, navigation}) => (
     <TouchableOpacity
       style={styles.closetButton}
       onPress={() => navigation.navigate('seecloset', {id, name})}>
-      <Text style={styles.closetButtonText}>옷장 보기</Text>
+      <Text style={styles.closetButtonText}>옷장 보러가기</Text>
     </TouchableOpacity>
   </View>
 );
