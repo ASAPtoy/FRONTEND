@@ -33,6 +33,12 @@ const ProfileScreen = () => {
           >
             <Text>로그인</Text>
           </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.profileButton}
+            onPress={() => navigation.navigate('location')} // Login 스크린으로 이동
+          >
+            <Text>위치인증</Text>
+          </TouchableOpacity>
         </View>
         <View style={styles.separator} />
       </View>
