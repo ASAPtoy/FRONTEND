@@ -75,7 +75,6 @@ android {
     ndkVersion rootProject.ext.ndkVersion
     compileSdkVersion 34
     buildToolsVersion "34.0.0"
-    kotlinVersion "1.5.21"
     namespace "com.asap"
     defaultConfig {
         applicationId "com.asap"
