@@ -1,48 +1,31 @@
-// 필요한 import 구문들...
-import React, { useState } from 'react';
-import { PermissionsAndroid, Alert, Platform } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import React, { useState, useEffect } from 'react';
+import { Alert, Button, Text, View, Image, ScrollView, TouchableOpacity, StyleSheet, PermissionsAndroid, Platform } from 'react-native';
+import Geolocation from 'react-native-geolocation-service';
 import axios from 'axios';
-import {
-  View,
-  Text,
-  Image,
-  ScrollView,
-  TouchableOpacity,
-  StyleSheet,
-} from 'react-native';
-import MenuItem from './MenuItem';  // 새로운 파일에서 MenuItem import
-import { getCurrentLocation } from './handleLocationPress';
+import MenuItem from './MenuItem';
 
-// 카카오맵 API 키
 const KAKAO_MAP_API_KEY = 'e820c6eddd328d86c2e8f2722faf58b8';
-const KIWI_REST_API_KEY = '8794f20102e2badae6bea657a1f616d4';
 
 const getTownName = async (latitude, longitude) => {
   try {
-    // 카카오맵 API 호출을 위한 URL
     const apiUrl = `https://dapi.kakao.com/v2/local/geo/coord2regioncode.json?x=${longitude}&y=${latitude}`;
-
-    // API 호출
     const response = await axios.get(apiUrl, {
       headers: {
         Authorization: `KakaoAK ${KAKAO_MAP_API_KEY}`,
       },
     });
 
-    // API 응답에서 주소 정보 추출
     const addressInfo = response.data.documents[0];
     const townName = addressInfo.address_name;
 
     return townName;
   } catch (error) {
     console.error('Error getting town name:', error);
-    throw error;
+    throw error; // 에러를 다시 던져서 상위 호출자에게 전달
   }
 };
 
 const ProfileScreen = () => {
-  const navigation = useNavigation();
   const [myTown, setMyTown] = useState(null);
   const [coordinate, setCoordinate] = useState(null);
   const [townName, setTownName] = useState(null);
@@ -50,7 +33,6 @@ const ProfileScreen = () => {
 
   const handleLocationPress = async () => {
     try {
-      // 위치 권한 요청
       if (Platform.OS === 'android') {
         const granted = await PermissionsAndroid.request(
           PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION
@@ -61,28 +43,53 @@ const ProfileScreen = () => {
         }
       }
 
-      // 현재 위치 가져오기
-      await getCurrentLocation(
-        setMyTown,
-        setCoordinate,
-        async (latitude, longitude) => {
-          const town = await getTownName(latitude, longitude);
-          setTownName(town);
-        },
-        setTownCode,
-        KIWI_REST_API_KEY
-      );
+      await getCurrentLocation();
     } catch (error) {
       console.error('Error handling location press:', error);
+      Alert.alert('위치 정보를 가져오는데 실패했습니다.');
     }
   };
+
+  const getCurrentLocation = async () => {
+    try {
+      Geolocation.getCurrentPosition(
+        position => {
+          const { latitude, longitude } = position.coords;
+          setCoordinate({ latitude, longitude });
+          getTown(latitude, longitude);
+        },
+        error => {
+          console.error('Error getting current location:', error);
+          Alert.alert('위치 정보를 가져오는데 실패했습니다.');
+        },
+        { enableHighAccuracy: true, timeout: 15000, maximumAge: 10000 }
+      );
+    } catch (error) {
+      console.error('Error getting current location:', error);
+      Alert.alert('위치 정보를 가져오는데 실패했습니다.');
+    }
+  };
+
+  const getTown = async (latitude, longitude) => {
+    try {
+      const town = await getTownName(latitude, longitude);
+      setTownName(town);
+    } catch (error) {
+      console.error('Error getting town:', error);
+      Alert.alert('위치 정보를 가져오는데 실패했습니다.');
+    }
+  };
+
+  useEffect(() => {
+    // 여기서 초기 로딩 시 위치 정보를 가져올 수 있습니다.
+    // getCurrentLocation();
+  }, []);
 
   return (
     <ScrollView style={styles.container}>
       <View style={styles.profileSection}>
         <Image
-         source={require('./assets/AsaP_image/daeun_img.jpg')}
-
+          source={require('./assets/AsaP_image/daeun_img.jpg')}
           style={styles.profileImage}
         />
         <Text style={styles.profileName}>이다은님의 계정</Text>
@@ -141,7 +148,6 @@ const ProfileScreen = () => {
 };
 
 const styles = StyleSheet.create({
-  // 스타일 정의
   container: {
     flex: 1,
     backgroundColor: '#F0EDE5',
@@ -167,14 +173,11 @@ const styles = StyleSheet.create({
     margin: 3,
     borderRadius: 10,
   },
-  mannerTemperature: {
-    // 매너온도 스타일
-  },
+  mannerTemperature: {},
   mannerTemperatureText: {
     fontSize: 18,
     textAlign: 'center',
     fontWeight: 'bold',
-    // 추가 스타일
   },
   tradingRates: {
     flexDirection: 'row',
@@ -186,21 +189,17 @@ const styles = StyleSheet.create({
   },
   tradingRateTitle: {
     fontSize: 16,
-    // 추가 스타일
   },
   tradingRateValue: {
     fontSize: 16,
     fontWeight: 'bold',
-    // 추가 스타일
   },
   infoBox: {
     marginVertical: 10,
     padding: 20,
     backgroundColor: '#f5f5f5',
   },
-  menuSection: {
-    // 스타일 지정
-  },
+  menuSection: {},
   menuItem: {
     padding: 20,
     borderBottomWidth: 1,
@@ -210,16 +209,15 @@ const styles = StyleSheet.create({
     fontSize: 18,
   },
   separator: {
-    height: 2, // 구분선의 높이
-    backgroundColor: '#CCCCCC', // 회색 구분선 색상
-    width: '100%', // 부모 컨테이너를 꽉 채우기
+    height: 2,
+    backgroundColor: '#CCCCCC',
+    width: '100%',
     marginTop: 5,
   },
   buttonContainer: {
-    flexDirection: 'row', // 가로 방향으로 정렬
-    justifyContent: 'center', // 컨테이너 내부에서 중앙 정렬
-    alignItems: 'center', // 세로축 기준 중앙 정렬
-    // 필요하다면 여기에 추가적인 스타일링 (예: padding, margin)
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });
 
