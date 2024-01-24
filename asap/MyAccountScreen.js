@@ -1,5 +1,8 @@
-import React from 'react';
-import {useNavigation} from '@react-navigation/native'; // 네비게이션 훅 임포트
+// 필요한 import 구문들...
+import React, { useState } from 'react';
+import { PermissionsAndroid, Alert, Platform } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+import axios from 'axios';
 import {
   View,
   Text,
@@ -8,34 +11,97 @@ import {
   TouchableOpacity,
   StyleSheet,
 } from 'react-native';
+import MenuItem from './MenuItem';  // 새로운 파일에서 MenuItem import
+import { getCurrentLocation } from './handleLocationPress';
+
+// 카카오맵 API 키
+const KAKAO_MAP_API_KEY = 'e820c6eddd328d86c2e8f2722faf58b8';
+const KIWI_REST_API_KEY = '8794f20102e2badae6bea657a1f616d4';
+
+const getTownName = async (latitude, longitude) => {
+  try {
+    // 카카오맵 API 호출을 위한 URL
+    const apiUrl = `https://dapi.kakao.com/v2/local/geo/coord2regioncode.json?x=${longitude}&y=${latitude}`;
+
+    // API 호출
+    const response = await axios.get(apiUrl, {
+      headers: {
+        Authorization: `KakaoAK ${KAKAO_MAP_API_KEY}`,
+      },
+    });
+
+    // API 응답에서 주소 정보 추출
+    const addressInfo = response.data.documents[0];
+    const townName = addressInfo.address_name;
+
+    return townName;
+  } catch (error) {
+    console.error('Error getting town name:', error);
+    throw error;
+  }
+};
 
 const ProfileScreen = () => {
-  const navigation = useNavigation(); // 네비게이션 훅 사용
+  const navigation = useNavigation();
+  const [myTown, setMyTown] = useState(null);
+  const [coordinate, setCoordinate] = useState(null);
+  const [townName, setTownName] = useState(null);
+  const [townCode, setTownCode] = useState(null);
+
+  const handleLocationPress = async () => {
+    try {
+      // 위치 권한 요청
+      if (Platform.OS === 'android') {
+        const granted = await PermissionsAndroid.request(
+          PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION
+        );
+        if (granted !== PermissionsAndroid.RESULTS.GRANTED) {
+          Alert.alert('위치 권한이 필요합니다.');
+          return;
+        }
+      }
+
+      // 현재 위치 가져오기
+      await getCurrentLocation(
+        setMyTown,
+        setCoordinate,
+        async (latitude, longitude) => {
+          const town = await getTownName(latitude, longitude);
+          setTownName(town);
+        },
+        setTownCode,
+        KIWI_REST_API_KEY
+      );
+    } catch (error) {
+      console.error('Error handling location press:', error);
+    }
+  };
 
   return (
     <ScrollView style={styles.container}>
       <View style={styles.profileSection}>
         <Image
-          source={require('./assets/AsaP_image/daeun_img.jpg')}
+         source={require('./assets/AsaP_image/daeun_img.jpg')}
+
           style={styles.profileImage}
         />
         <Text style={styles.profileName}>이다은님의 계정</Text>
         <View style={styles.buttonContainer}>
           <TouchableOpacity
             style={styles.profileButton}
-            onPress={() => navigation.navigate('profile')} // Login 스크린으로 이동
+            onPress={() => navigation.navigate('profile')}
           >
             <Text>프로필 수정</Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={styles.profileButton}
-            onPress={() => navigation.navigate('login')} // Login 스크린으로 이동
+            onPress={() => navigation.navigate('login')}
           >
             <Text>로그인</Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={styles.profileButton}
-            onPress={() => navigation.navigate('location')} // Login 스크린으로 이동
+            onPress={handleLocationPress}
           >
             <Text>위치인증</Text>
           </TouchableOpacity>
@@ -74,13 +140,8 @@ const ProfileScreen = () => {
   );
 };
 
-const MenuItem = ({title}) => (
-  <View style={styles.menuItem}>
-    <Text style={styles.menuItemText}>{title}</Text>
-  </View>
-);
-
 const styles = StyleSheet.create({
+  // 스타일 정의
   container: {
     flex: 1,
     backgroundColor: '#F0EDE5',
@@ -160,7 +221,6 @@ const styles = StyleSheet.create({
     alignItems: 'center', // 세로축 기준 중앙 정렬
     // 필요하다면 여기에 추가적인 스타일링 (예: padding, margin)
   },
-  // ... 추가 스타일 정의
 });
 
 export default ProfileScreen;
