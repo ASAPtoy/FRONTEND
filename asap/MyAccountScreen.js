@@ -1,29 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Alert, Button, Text, View, Image, ScrollView, TouchableOpacity, StyleSheet, PermissionsAndroid, Platform } from 'react-native';
+import { Alert, Text, View, Image, ScrollView, TouchableOpacity, StyleSheet, PermissionsAndroid, Platform } from 'react-native';
 import Geolocation from 'react-native-geolocation-service';
 import axios from 'axios';
 import MenuItem from './MenuItem';
 
-const KAKAO_MAP_API_KEY = '8794f20102e2badae6bea657a1f616d4';
-
-const getTownName = async (latitude, longitude) => {
-  try {
-    const apiUrl = `https://dapi.kakao.com/v2/local/geo/coord2regioncode.json?x=${longitude}&y=${latitude}`;
-    const response = await axios.get(apiUrl, {
-      headers: {
-        Authorization: `KakaoAK ${KAKAO_MAP_API_KEY}`,
-      },
-    });
-
-    const addressInfo = response.data.documents[0];
-    const townName = addressInfo.address_name;
-
-    return townName;
-  } catch (error) {
-    console.error('Error getting town name:', error);
-    throw error; // 에러를 다시 던져서 상위 호출자에게 전달
-  }
-};
+const GOOGLE_MAPS_API_KEY = 'AIzaSyAqvuYuIoW6eesQ3ihAeq3H7z8kSyHCP4s';
 
 const ProfileScreen = () => {
   const [myTown, setMyTown] = useState(null);
@@ -33,6 +14,7 @@ const ProfileScreen = () => {
 
   const handleLocationPress = async () => {
     try {
+      console.log('handleLocationPress 호출됨');
       if (Platform.OS === 'android') {
         const granted = await PermissionsAndroid.request(
           PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION
@@ -52,8 +34,10 @@ const ProfileScreen = () => {
 
   const getCurrentLocation = async () => {
     try {
+      console.log('getCurrentLocation 호출됨');
       Geolocation.getCurrentPosition(
         position => {
+          console.log('position 로그:', position);
           const { latitude, longitude } = position.coords;
           setCoordinate({ latitude, longitude });
           getTown(latitude, longitude);
@@ -72,17 +56,42 @@ const ProfileScreen = () => {
 
   const getTown = async (latitude, longitude) => {
     try {
+      console.log('getTown 호출됨');
       const town = await getTownName(latitude, longitude);
       setTownName(town);
+      console.log('setTownName 호출됨');
     } catch (error) {
       console.error('Error getting town:', error);
       Alert.alert('위치 정보를 가져오는데 실패했습니다.');
     }
   };
 
+    const getTownName = async (latitude, longitude) => {
+      try {
+        console.log('getTownName 호출됨');
+        const apiUrl = `https://maps.googleapis.com/maps/api/geocode/json?latlng=${latitude},${longitude}&language=ko&key=${GOOGLE_MAPS_API_KEY}`;
+        const response = await axios.get(apiUrl);
+
+        const addressInfo = response.data.results[0];
+
+        if (addressInfo) {
+          console.log('Google Maps API에서 가져온 정보 로그:', addressInfo);
+          const townName = addressInfo.formatted_address;
+          return townName;
+        } else {
+          console.error('API 응답에서 주소 정보를 찾을 수 없습니다.');
+          throw new Error('주소 정보를 찾을 수 없습니다.');
+        }
+      } catch (error) {
+        console.error('Error getting town name:', error);
+        throw error;
+      }
+    };
+
+
   useEffect(() => {
     // 여기서 초기 로딩 시 위치 정보를 가져올 수 있습니다.
-    // getCurrentLocation();
+    getCurrentLocation();
   }, []);
 
   return (
@@ -143,82 +152,87 @@ const ProfileScreen = () => {
         <MenuItem title="🧧 받은 매너" />
         <MenuItem title="✍ 받은 거래 후기" />
       </View>
+
+      <View style={styles.addressSection}>
+        <Text style={styles.addressTitle}>현재 위치 주소:</Text>
+        <Text>{townName}</Text>
+      </View>
     </ScrollView>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
-    backgroundColor: '#F0EDE5',
-  },
-  profileSection: {
-    alignItems: 'center',
-    padding: 20,
-  },
-  profileImage: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-  },
-  profileName: {
-    marginTop: 10,
-    fontSize: 24,
-    fontWeight: 'bold',
-  },
-  profileButton: {
-    backgroundColor: '#e7e7e7',
-    padding: 10,
-    marginTop: 10,
-    margin: 3,
-    borderRadius: 10,
-  },
-  mannerTemperature: {},
-  mannerTemperatureText: {
-    fontSize: 18,
-    textAlign: 'center',
-    fontWeight: 'bold',
-  },
-  tradingRates: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    padding: 20,
-  },
-  tradingRateItem: {
-    alignItems: 'center',
-  },
-  tradingRateTitle: {
-    fontSize: 16,
-  },
-  tradingRateValue: {
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
-  infoBox: {
-    marginVertical: 10,
-    padding: 20,
-    backgroundColor: '#f5f5f5',
-  },
-  menuSection: {},
-  menuItem: {
-    padding: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: '#dddddd',
-  },
-  menuItemText: {
-    fontSize: 18,
-  },
-  separator: {
-    height: 2,
-    backgroundColor: '#CCCCCC',
-    width: '100%',
-    marginTop: 5,
-  },
-  buttonContainer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
+        flex: 1,
+        backgroundColor: '#F0EDE5',
+      },
+      profileSection: {
+        alignItems: 'center',
+        padding: 20,
+      },
+      profileImage: {
+        width: 100,
+        height: 100,
+        borderRadius: 50,
+      },
+      profileName: {
+        marginTop: 10,
+        fontSize: 24,
+        fontWeight: 'bold',
+      },
+      profileButton: {
+        backgroundColor: '#e7e7e7',
+        padding: 10,
+        marginTop: 10,
+        margin: 3,
+        borderRadius: 10,
+      },
+      mannerTemperature: {},
+      mannerTemperatureText: {
+        fontSize: 18,
+        textAlign: 'center',
+        fontWeight: 'bold',
+      },
+      tradingRates: {
+        flexDirection: 'row',
+        justifyContent: 'space-around',
+        padding: 20,
+      },
+      tradingRateItem: {
+        alignItems: 'center',
+      },
+      tradingRateTitle: {
+        fontSize: 16,
+      },
+      tradingRateValue: {
+        fontSize: 16,
+        fontWeight: 'bold',
+      },
+      infoBox: {
+        marginVertical: 10,
+        padding: 20,
+        backgroundColor: '#f5f5f5',
+      },
+      menuSection: {},
+      menuItem: {
+        padding: 20,
+        borderBottomWidth: 1,
+        borderBottomColor: '#dddddd',
+      },
+      menuItemText: {
+        fontSize: 18,
+      },
+      separator: {
+        height: 2,
+        backgroundColor: '#CCCCCC',
+        width: '100%',
+        marginTop: 5,
+      },
+      buttonContainer: {
+        flexDirection: 'row',
+        justifyContent: 'center',
+        alignItems: 'center',
+      },
 });
 
 export default ProfileScreen;
