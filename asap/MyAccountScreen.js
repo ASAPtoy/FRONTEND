@@ -4,7 +4,7 @@ import Geolocation from 'react-native-geolocation-service';
 import axios from 'axios';
 import MenuItem from './MenuItem';
 
-const KAKAO_MAP_API_KEY = 'e820c6eddd328d86c2e8f2722faf58b8';
+const KAKAO_MAP_API_KEY = '8794f20102e2badae6bea657a1f616d4';
 
 const getTownName = async (latitude, longitude) => {
   try {
