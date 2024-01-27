@@ -8,6 +8,32 @@ import {
   ScrollView,
 } from "react-native";
 
+// Preview component code
+const Preview = () => {
+  const [imageSrc, setImageSrc] = useState(null);
+
+  const onUpload = (e) => {
+    const file = e.target.files[0];
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+
+    return new Promise((resolve) => {
+      reader.onload = () => {
+        setImageSrc(reader.result || null); // 파일의 컨텐츠
+        resolve();
+      };
+    });
+  };
+
+  return (
+    <>
+      <input accept="image/*" multiple type="file" onChange={(e) => onUpload(e)} />
+      <img width={"100%"} src={imageSrc} />
+    </>
+  );
+};
+
+// ListingForm component code
 const ListingForm = () => {
   const [title, setTitle] = useState("");
   const [price, setPrice] = useState("");
@@ -29,6 +55,10 @@ const ListingForm = () => {
         {/* Text component within TouchableOpacity for the button text */}
         <Text style={styles.uploadButtonText}>📷</Text>
       </TouchableOpacity>
+
+      {/* Integrate the Preview component */}
+      <Preview />
+
       <Text style={styles.subtitle}>제목</Text>
       <TextInput
         style={styles.input}
