@@ -6,30 +6,29 @@ import {
   TextInput,
   TouchableOpacity,
   ScrollView,
-  Image,
 } from "react-native";
-import ImagePicker from "react-native-image-picker";
 
 // Preview component code
 const Preview = () => {
   const [imageSrc, setImageSrc] = useState(null);
 
-  const onUpload = () => {
-    ImagePicker.showImagePicker({}, (response) => {
-      if (response.didCancel || response.error) {
-        console.log("Image selection canceled or failed");
-      } else {
-        setImageSrc(response.uri);
-      }
+  const onUpload = (e) => {
+    const file = e.target.files[0];
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+
+    return new Promise((resolve) => {
+      reader.onload = () => {
+        setImageSrc(reader.result || null); // 파일의 컨텐츠
+        resolve();
+      };
     });
   };
 
   return (
     <>
-      <TouchableOpacity onPress={onUpload}>
-        <Text style={styles.uploadButtonText}>📷</Text>
-      </TouchableOpacity>
-      {imageSrc && <Image source={{ uri: imageSrc }} style={{ width: "100%", height: 200 }} />}
+      <input accept="image/*" multiple type="file" onChange={(e) => onUpload(e)} />
+      <img width={"100%"} src={imageSrc} />
     </>
   );
 };
@@ -45,6 +44,7 @@ const ListingForm = () => {
     // Submit logic here
     console.log({ title, price, description, transactionMethod });
   };
+
 
   return (
     <ScrollView style={styles.container}>
