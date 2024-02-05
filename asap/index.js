@@ -62,7 +62,7 @@ export default function MyApp() {
           component={BottomTabNavigator}
           options={{headerShown: false}}
         />
-        <Stack.Screen name="Board" component={BoardScreen} />
+        <Stack.Screen name="BoardScreen" component={BoardScreen} />
         <Stack.Screen name="login" component={loginScreen} />
         <Stack.Screen name="profile" component={profileScreen} />
         <Stack.Screen name="Chat" component={Detailchatting} />

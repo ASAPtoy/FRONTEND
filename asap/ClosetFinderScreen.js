@@ -136,16 +136,19 @@ const App = () => {
   ];
   return (
     <View style={styles.app}>
-      <SearchBar />
+      {/* SearchBar Component */}
+      {/* FlatList Component */}
       <FlatList
         data={products}
         renderItem={renderItem}
         keyExtractor={item => item.id}
         contentContainerStyle={styles.productList}
       />
+
+      {/* Navigate to BoardScreen when the button is pressed */}
       <TouchableOpacity
         style={styles.addButton}
-        onPress={() => navigation.navigate('Board')} // 여기서 BoardScreen으로 네비게이트
+        onPress={() => navigation.navigate('BoardScreen')} // Navigate to BoardScreen
       >
         <Text style={styles.addButtonText}>+글쓰기</Text>
       </TouchableOpacity>

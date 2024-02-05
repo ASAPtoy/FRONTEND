@@ -1,50 +1,39 @@
 import React, { useState } from "react";
+import ImagePicker from 'react-native-image-picker';
 import {
   StyleSheet,
   View,
   Text,
-  TextInput,
   TouchableOpacity,
+  Image,
   ScrollView,
+  TextInput,
 } from "react-native";
 
-// Preview component code
 const Preview = () => {
   const [imageSrc, setImageSrc] = useState(null);
-
-  const onUpload = (e) => {
-    const file = e.target.files[0];
-    const reader = new FileReader();
-    reader.readAsDataURL(file);
-
-    return new Promise((resolve) => {
-      reader.onload = () => {
-        setImageSrc(reader.result || null); // 파일의 컨텐츠
-        resolve();
-      };
-    });
-  };
-
-  return (
-    <>
-      <input accept="image/*" multiple type="file" onChange={(e) => onUpload(e)} />
-      <img width={"100%"} src={imageSrc} />
-    </>
-  );
-};
-
-// ListingForm component code
-const ListingForm = () => {
   const [title, setTitle] = useState("");
   const [price, setPrice] = useState("");
   const [description, setDescription] = useState("");
   const [transactionMethod, setTransactionMethod] = useState("sell"); // 'sell' or 'share'
 
-  const handleSubmit = () => {
-    // Submit logic here
-    console.log({ title, price, description, transactionMethod });
+  const selectImage = () => {
+    ImagePicker.showImagePicker((response) => {
+      if (response.didCancel) {
+        console.log('User cancelled image picker');
+      } else if (response.error) {
+        console.log('ImagePicker Error: ', response.error);
+      } else {
+        const source = { uri: response.uri };
+        setImageSrc(source);
+      }
+    });
   };
 
+  const handleSubmit = () => {
+    console.log({ title, price, description, transactionMethod });
+    // 여기에 제출 로직을 추가할 수 있습니다.
+  };
 
   return (
     <ScrollView style={styles.container}>
@@ -52,13 +41,13 @@ const ListingForm = () => {
         <Text style={styles.title}>나의 옷 작성하기</Text>
       </View>
       <Text style={styles.sub1title}>사진 추가하기</Text>
-      <TouchableOpacity style={styles.uploadButton}>
-        {/* Text component within TouchableOpacity for the button text */}
+      <TouchableOpacity style={styles.uploadButton} onPress={selectImage}>
         <Text style={styles.uploadButtonText}>📷</Text>
       </TouchableOpacity>
-
-      {/* Integrate the Preview component */}
-      <Preview />
+      <View style={styles.previewContainer}>
+        {imageSrc && <Image source={imageSrc} style={styles.previewImage} />}
+        {!imageSrc && <Text style={styles.previewText}>사진을 추가하세요</Text>}
+      </View>
 
       <Text style={styles.subtitle}>제목</Text>
       <TextInput
@@ -165,41 +154,55 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#ddd",
     borderRadius: 5,
-    width: 70, // Square shape
-    height: 70, // Square shape
-    alignSelf: "center", // Center button horizontally
+    width: 50,
+    height: 50,
     marginBottom: 15,
   },
-
   uploadButtonText: {
-    textAlign: "center", // Center text horizontally
-    color: "black", // White text color
-    fontWeight: "bold",
-    fontSize: 50, // Bold text font weight
+    fontSize: 24,
+  },
+  previewContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: '#ddd',
+    borderRadius: 5,
+    width: 200,
+    height: 200,
+    alignSelf: 'center',
+    marginBottom: 15,
+  },
+  previewImage: {
+    width: '100%',
+    height: '100%',
+    resizeMode: 'cover',
+    borderRadius: 5,
+  },
+  previewText: {
+    color: 'black',
+    fontWeight: 'bold',
   },
   submitButton: {
-    backgroundColor: "#F0EDE5",
-    padding: 10,
+    backgroundColor: "blue",
+    padding: 15,
     borderRadius: 5,
     alignItems: "center",
-    justifyContent: "center",
-    marginBottom: 15,
   },
   buttonText: {
-    color: "black",
+    color: "#fff",
+    fontSize: 18,
+    fontWeight: "bold",
   },
   subtitle: {
-    fontSize: 15,
+    fontSize: 18,
     fontWeight: "bold",
-    marginLeft: 1,
+    marginBottom: 5,
   },
   sub1title: {
-    fontSize: 15,
+    fontSize: 20,
     fontWeight: "bold",
-    marginLeft: 1,
-    textAlign: "center",
-    paddingBottom: 3,
+    marginBottom: 5,
   },
 });
 
-export default ListingForm;
+export default Preview;
